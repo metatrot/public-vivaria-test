@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
   base_url = "https://raw.githubusercontent.com/METR/vivaria/#{vivaria_version}"
 
   config.vm.box = "ubuntu/jammy64"
-  config.vm.network "forwarded_port", guest: 4000, host: 4000
+  config.vm.network "forwarded_port", guest: 4002, host: 4000
   
   config.vm.provider "virtualbox" do |vb|
     vb.memory = "4096"
