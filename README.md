@@ -85,7 +85,7 @@ viv register_ssh_public_key ~/.ssh/id_ed25519.pub
 
 ## Issues
 
-The VM generates new secret tokens each time it's run, but your browser will cache the last entered ones. Make sure to clear the local storage.
+The VM generates new secret tokens each time it's run, but your browser will cache the last entered ones. Make sure to clear the local storage if you get `Unable to transform response from server`.
 
 If the queue gets stuck:
 1. Connect to the VM using `vagrant ssh`
