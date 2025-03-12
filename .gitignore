@@ -1,4 +1,4 @@
 .vagrant
-vivaria_creds.txt
+vivaria_tokens.txt
 api_keys.txt
 *.vdi

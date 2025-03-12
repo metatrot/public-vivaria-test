@@ -83,6 +83,8 @@ EOF
   SHELL
 
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ""
+
     mkdir ~/vivaria
     cd ~/vivaria
     
@@ -90,14 +92,10 @@ EOF
     curl -fsSL "#{base_url}/scripts/setup-docker-compose.sh" | bash -
     
     if [ -f /vagrant/api_keys.txt ]; then
-      echo "Appending API keys to .env.server file..."
       cat /vagrant/api_keys.txt >> ~/vivaria/.env.server
-    else
-      echo "WARNING: No api_keys.txt file found!"
-      echo "The server requires valid API keys to run AI agents."
-      echo "You can use api_keys.txt.example as a template but must replace the keys with valid ones."
-      echo "Continuing setup without API keys. You can still use the headless-human agent."
     fi
+
+    grep -E "ACCESS_TOKEN|ID_TOKEN" ~/vivaria/.env.server > /vagrant/vivaria_tokens.txt
     
     sudo docker compose up --wait --detach --pull=always
 
@@ -108,12 +106,11 @@ EOF
     git clone https://github.com/poking-agents/modular-public.git ~/agents/modular-public
     git clone https://github.com/poking-agents/headless-human.git ~/agents/headless-human
 
-    mkdir ~/vivaria-venv
-    python3.12 -m venv ~/vivaria-venv
-    source ~/vivaria-venv/bin/activate
+    python3.12 -m venv ~/venv
+    source ~/venv/bin/activate
     pip install "git+https://github.com/METR/vivaria.git@#{vivaria_version}#subdirectory=cli"
     curl -fsSL "#{base_url}/scripts/configure-cli-for-docker-compose.sh" | bash -
     
-    #viv run crossword/5x5_verify --task-family-path ~/public-tasks/crossword/ --agent-path ~/agents/modular-public/
+    viv register_ssh_public_key ~/.ssh/id_ed25519.pub
   SHELL
 end
