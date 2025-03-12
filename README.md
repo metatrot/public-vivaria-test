@@ -8,10 +8,10 @@ Demo of running tasks from the [public-tasks](https://github.com/METR/public-tas
 1. Install VirtualBox from [here](https://www.virtualbox.org/wiki/Downloads)
 2. Install Vagrant from [here](https://developer.hashicorp.com/vagrant/install)
 3. Clone this repo
-4. To run LLM agents, put your keys in `api_keys.txt` inside the repo directory
+4. In order to start agent runs, put your keys in `api_keys.txt` inside the repo directory
 5. Run `vagrant up` in the repo directory
 6. Get `ACCESS_TOKEN` and `ID_TOKEN` from `vivaria_tokens.txt` that will appear after the VM starts
-7. Go to [https://localhost:4002](https://localhost:4002) and put in the above values when asked
+7. Go to [https://localhost:4000](https://localhost:4000) and put in the above values when asked
 
 
 ### Running an AI agent
@@ -36,6 +36,8 @@ This will print out a link you can connect to in your browser.
 ```bash
 viv run debug_small_libs/markdown --task-family-path ~/public-tasks/debug_small_libs/ --agent-path ~/agents/headless-human/
 ```
+
+(Note: unfortunately, a valid API key is still needed, even though it won't be used)
 
 This will print out a run number. SSH into the run (while already inside of the VM):
 
@@ -82,6 +84,8 @@ viv register_ssh_public_key ~/.ssh/id_ed25519.pub
 ```
 
 ## Issues
+
+The VM generates new secret tokens each time it's run, but your browser will cache the last entered ones. Make sure to clear the local storage.
 
 If the queue gets stuck:
 1. Connect to the VM using `vagrant ssh`
