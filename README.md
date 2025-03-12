@@ -11,7 +11,7 @@ Demo of running tasks from the [public-tasks](https://github.com/METR/public-tas
 4. To run LLM agents, put your keys in `api_keys.txt` inside the repo directory
 5. Run `vagrant up` in the repo directory
 6. Get `ACCESS_TOKEN` and `ID_TOKEN` from `vivaria_tokens.txt` that will appear after the VM starts
-7. Go to [https://localhost:4000](https://localhost:4000) and put in the above values when asked
+7. Go to [https://localhost:4002](https://localhost:4002) and put in the above values when asked
 
 
 ### Running an AI agent
