@@ -95,7 +95,7 @@ EOF
       cat /vagrant/api_keys.txt >> ~/vivaria/.env.server
     fi
 
-    grep -E "ACCESS_TOKEN|ID_TOKEN" ~/vivaria/.env.server > /vagrant/vivaria_tokens.txt
+    grep -E "ACCESS_TOKEN=|ID_TOKEN=" ~/vivaria/.env.server > /vagrant/vivaria_tokens.txt
     
     sudo docker compose up --wait --detach --pull=always
 
