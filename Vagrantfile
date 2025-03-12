@@ -2,9 +2,6 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  vivaria_version = "main"
-  base_url = "https://raw.githubusercontent.com/METR/vivaria/#{vivaria_version}"
-
   config.vm.box = "ubuntu/jammy64"
   config.vm.network "forwarded_port", guest: 4002, host: 4000
   
@@ -13,7 +10,7 @@ Vagrant.configure("2") do |config|
     vb.cpus = 2
     vb.name = "vivaria-dev"
     
-    # Añadir un disco adicional para XFS
+    # Add an additional disk for XFS
     unless File.exist?('./xfs_disk.vdi')
       vb.customize ['createhd', '--filename', './xfs_disk.vdi', '--variant', 'Fixed', '--size', 60 * 1024]
     end
@@ -35,22 +32,22 @@ Vagrant.configure("2") do |config|
       software-properties-common \
       xfsprogs
     
-    # Configurar el disco XFS
+    # Configure the XFS disk
     if [ ! -e /dev/sdc1 ]; then
       echo "Partitioning the new disk..."
       parted /dev/sdc mklabel gpt
       parted /dev/sdc mkpart primary xfs 0% 100%
     fi
     
-    # Formatear con XFS si es necesario
+    # Format with XFS if needed
     if ! blkid /dev/sdc1 | grep xfs; then
       mkfs.xfs -f /dev/sdc1
     fi
     
-    # Crear directorio para Docker
+    # Create directory for Docker
     mkdir -p /var/lib/docker
     
-    # Montar el sistema de archivos XFS con pquota
+    # Mount the XFS filesystem with pquota
     if ! grep -q "/dev/sdc1" /etc/fstab; then
       echo "/dev/sdc1 /var/lib/docker xfs defaults,pquota 0 0" >> /etc/fstab
       mount /var/lib/docker
@@ -72,7 +69,7 @@ Vagrant.configure("2") do |config|
     apt-get update
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     
-    # Configurar Docker para usar overlay2
+    # Configure Docker to use overlay2
     cat > /etc/docker/daemon.json <<EOF
 {
   "storage-driver": "overlay2"
@@ -83,13 +80,16 @@ EOF
   SHELL
 
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    vivaria_version="main"
+    base_url="https://raw.githubusercontent.com/METR/vivaria/$vivaria_version"
+
     ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519 -N ""
 
     mkdir ~/vivaria
     cd ~/vivaria
     
-    curl -fsSL "#{base_url}/docker-compose.yml" -o docker-compose.yml
-    curl -fsSL "#{base_url}/scripts/setup-docker-compose.sh" | bash -
+    curl -fsSL "${base_url}/docker-compose.yml" -o docker-compose.yml
+    curl -fsSL "${base_url}/scripts/setup-docker-compose.sh" | bash -
     
     if [ -f /vagrant/api_keys.txt ]; then
       cat /vagrant/api_keys.txt >> ~/vivaria/.env.server
@@ -108,8 +108,8 @@ EOF
 
     python3.12 -m venv ~/venv
     source ~/venv/bin/activate
-    pip install "git+https://github.com/METR/vivaria.git@#{vivaria_version}#subdirectory=cli"
-    curl -fsSL "#{base_url}/scripts/configure-cli-for-docker-compose.sh" | bash -
+    pip install "git+https://github.com/METR/vivaria.git@${vivaria_version}#subdirectory=cli"
+    curl -fsSL "${base_url}/scripts/configure-cli-for-docker-compose.sh" | bash -
     
     viv register_ssh_public_key ~/.ssh/id_ed25519.pub
   SHELL
