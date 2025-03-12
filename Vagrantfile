@@ -12,6 +12,12 @@ Vagrant.configure("2") do |config|
     vb.memory = "4096"
     vb.cpus = 2
     vb.name = "vivaria-dev"
+    
+    # Añadir un disco adicional para XFS
+    unless File.exist?('./xfs_disk.vdi')
+      vb.customize ['createhd', '--filename', './xfs_disk.vdi', '--variant', 'Fixed', '--size', 60 * 1024]
+    end
+    vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', './xfs_disk.vdi']
   end
   
   config.vm.provision "shell", inline: <<-SHELL
@@ -26,7 +32,29 @@ Vagrant.configure("2") do |config|
       curl \
       gnupg \
       lsb-release \
-      software-properties-common
+      software-properties-common \
+      xfsprogs
+    
+    # Configurar el disco XFS
+    if [ ! -e /dev/sdc1 ]; then
+      echo "Partitioning the new disk..."
+      parted /dev/sdc mklabel gpt
+      parted /dev/sdc mkpart primary xfs 0% 100%
+    fi
+    
+    # Formatear con XFS si es necesario
+    if ! blkid /dev/sdc1 | grep xfs; then
+      mkfs.xfs -f /dev/sdc1
+    fi
+    
+    # Crear directorio para Docker
+    mkdir -p /var/lib/docker
+    
+    # Montar el sistema de archivos XFS con pquota
+    if ! grep -q "/dev/sdc1" /etc/fstab; then
+      echo "/dev/sdc1 /var/lib/docker xfs defaults,pquota 0 0" >> /etc/fstab
+      mount /var/lib/docker
+    fi
 
     add-apt-repository -y ppa:deadsnakes/ppa
     apt-get update
@@ -43,6 +71,15 @@ Vagrant.configure("2") do |config|
 
     apt-get update
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    
+    # Configurar Docker para usar overlay2
+    cat > /etc/docker/daemon.json <<EOF
+{
+  "storage-driver": "overlay2"
+}
+EOF
+    
+    systemctl restart docker
   SHELL
 
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
@@ -77,6 +114,6 @@ Vagrant.configure("2") do |config|
     pip install "git+https://github.com/METR/vivaria.git@#{vivaria_version}#subdirectory=cli"
     curl -fsSL "#{base_url}/scripts/configure-cli-for-docker-compose.sh" | bash -
     
-    viv run crossword/5x5_verify --task-family-path ~/public-tasks/crossword/ --agent-path ~/agents/modular-public/
+    #viv run crossword/5x5_verify --task-family-path ~/public-tasks/crossword/ --agent-path ~/agents/modular-public/
   SHELL
 end
